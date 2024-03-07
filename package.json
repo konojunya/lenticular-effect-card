@@ -1,0 +1,9 @@
+{
+  "name": "lenticular-effect-card",
+  "scripts": {
+    "start": "serve"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
