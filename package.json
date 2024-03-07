@@ -1,5 +1,6 @@
 {
   "name": "lenticular-effect-card",
+  "type": "module",
   "scripts": {
     "start": "serve"
   },

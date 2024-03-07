@@ -3,7 +3,81 @@
   <head>
     <meta charset="UTF-8" />
     <title>Lenticular Card(CSS Based)</title>
-    <link rel="stylesheet" href="style.css" />
+    <style>
+      h1 {
+        display: none;
+      }
+
+      .card {
+        display: flex;
+        --boards: 16; /* will be changed by JS, based on number of items */
+        --dimension: calc(var(--boards) * 3px);
+        --width: calc(var(--dimension) / var(--boards));
+        transform-style: preserve-3d;
+        transform: rotateY(var(--angle, -42deg)) rotateX(var(--angle-x));
+        --angle-x: 0.25deg;
+
+        list-style: none;
+      }
+
+      li {
+        height: var(--dimension);
+        width: var(--width);
+        position: relative;
+
+        transform-style: preserve-3d;
+      }
+
+      li::before,
+      li::after {
+        background-repeat: no-repeat;
+        background-size: var(--dimension) var(--dimension);
+        background-position: calc(var(--offset-x, 0) * var(--dimension)) center;
+
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        transform: rotateY(calc(60deg * var(--direction, -1)));
+        transform-origin: var(--origin-x, 100%) 50% 0px;
+      }
+
+      li::before {
+        /* desert scene */
+        background-image: url(/assets//aqua.png);
+      }
+      li::after {
+        /* Skyline and Homes */
+        background-image: url(/assets//suisei.png);
+        --direction: 1;
+        --origin-x: 0%;
+      }
+
+      body {
+        perspective: 1200px;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+      *,
+      *::before,
+      *::after {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+
+      @media (max-width: 520px) {
+        .card {
+          --dimension: calc(var(--boards) * 2px);
+        }
+      }
+    </style>
   </head>
   <body>
     <h1>Lenticular Card</h1>
@@ -213,6 +287,57 @@
       <li></li>
       <li></li>
     </ul>
-    <script defer src="index.js"></script>
+    <script>
+      let card = document.querySelector(".card");
+      let boards = Array.from(card.querySelectorAll("li"));
+
+      // Set CSS Variable to represent how many list items we have
+      card.style.setProperty("--boards", boards.length);
+
+      // Give each list item an offset for the background-position so the images appear complete across all the list items
+      boards.forEach((board, i) => {
+        board.style.setProperty("--offset-x", -i / boards.length);
+      });
+
+      // If browser supports Pointer Events, allow rotation about Y axis via pointer move, instead of using an infinite animation
+      const TOTAL_DEGREES = 84;
+      let clientWidth = window.innerWidth;
+      let step = TOTAL_DEGREES / clientWidth;
+      if ("PointerEvent" in window) {
+        card.style.animationIterationCount = 2;
+        document.body.addEventListener("pointermove", (e) => {
+          card.style.setProperty("--angle", `${-42 + e.clientX * step}deg`);
+        });
+      }
+
+      // Adjust Pointer Event ratios based on new screen width
+      window.addEventListener("resize", (e) => {
+        clientWidth = window.innerWidth;
+        step = TOTAL_DEGREES / clientWidth;
+      });
+
+      function orientIt(e) {
+        var amount = e.gamma / 12;
+        card.style.setProperty("--angle", `${-e.gamma}deg`);
+      }
+
+      //Support for accelerometer around Y axis (e.g. in your hand facing you tilting it to the left and the right... best when orientationlocked). Disable when pointer events are happening.
+      if (window.DeviceOrientationEvent) {
+        card.style.animationIterationCount = 2;
+        if (window.PointerEvent) {
+          document.body.addEventListener("pointermove", stopOrientation);
+          document.body.addEventListener("pointercancel", startOrientation);
+          document.body.addEventListener("pointerleave", startOrientation);
+        }
+        startOrientation();
+      }
+
+      function stopOrientation(e) {
+        window.removeEventListener("deviceorientation", orientIt);
+      }
+      function startOrientation(e) {
+        window.addEventListener("deviceorientation", orientIt);
+      }
+    </script>
   </body>
 </html>
